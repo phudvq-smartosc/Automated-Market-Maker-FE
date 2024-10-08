@@ -53,7 +53,6 @@ const Web3Provider: React.FC<Web3ProviderProps> = (props:Web3ProviderProps) => {
       const factoryAddress = config.factoryAddress;
       network.factory = getFactory(factoryAddress, network.signer);
     
-      console.log("NETWORK", network);
       
       setConnected(true);
     } catch (error) {

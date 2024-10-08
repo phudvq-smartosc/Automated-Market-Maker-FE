@@ -54,7 +54,7 @@ export default function TokensModal({ index, open, onClose }: TokenModalProps) {
       <div className={`modal-box h-4/5 max-h-200 max-w-120 ${open ? "block opacity-100" : "hidden opacity-0"} no-scrollbar overflow-y-auto p-0 transition duration-200 ease-in`}
       >
         <div id="modal-header"className="sticky top-0 z-50 flex items-center justify-between w-full pl-4 pr-2 h-14">
-          <h6>Select Token</h6>
+          <h6 className="text-2xl font-bold">Select Token</h6>
           <CloseIcon className="w-6 h-6" onClose={onClose} />
           </div>
 

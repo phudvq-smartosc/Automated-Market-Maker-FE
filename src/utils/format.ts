@@ -120,9 +120,11 @@ export const formatPercent = (value: string | number, decimals: number = 2): str
   if (isNaN(numValue) || numValue === 0) {
       return "0.0%"; // Return 0% if the value is NaN or 0
   }
-
+  if (numValue >= 1) {
+    return "100%"
+  }
   // Format the number as a percentage and remove trailing zeros
-  return `${(numValue * 100).toFixed(decimals).replace(/\.0+$/, "")}%`;
+  return `${(numValue * 100).toPrecision(6).replace(/\.0+$/, "")}%`;
 };
 
 export function formatAddress(address: string): string {

@@ -1,7 +1,7 @@
 export enum Level {
-    INFO = "alert-error",
+    INFO = "alert-info",
     WARNING = "alert-warning",
-    ERROR = "alert-info",
+    ERROR = "alert-error",
     SUCCESS = "alert-success"
 }
 

@@ -2,23 +2,24 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { TokenPair } from "../../types/tokenPair";
 import { TokenInterfaceReduce } from "../../types/token";
 import { PairInterface } from "../../types/pair";
+import { ZERO_ADDRESS, DEFAULT_TOKEN_ADDRESS, DEFAULT_TOKEN_SYMBOL, DEFAULT_TOKEN_NAME, DEFAULT_PAIR_SYMBOL } from "../../utils/defaultValue";
 const token1: TokenInterfaceReduce = {
-  name: "Token",
-  symbol: "TKN",
-  address: "0x",
+  name: DEFAULT_TOKEN_NAME,
+  symbol: DEFAULT_TOKEN_SYMBOL,
+  address: DEFAULT_TOKEN_ADDRESS
 };
 
 const token2: TokenInterfaceReduce = {
-  name: "Token",
-  symbol: "TKN",
-  address: "0x",
+  name: DEFAULT_TOKEN_NAME,
+  symbol: DEFAULT_TOKEN_SYMBOL,
+  address: DEFAULT_TOKEN_ADDRESS,
 };
 
 // Initial state
 const initialState = {
   pair: {
-    id: "pair1",
-    combinedSymbol: "TKN-TKN",
+    id: ZERO_ADDRESS,
+    combinedSymbol: DEFAULT_PAIR_SYMBOL,
     token0: token1,
     token1: token2,
   } as PairInterface,

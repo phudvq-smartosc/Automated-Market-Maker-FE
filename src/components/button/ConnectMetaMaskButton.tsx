@@ -11,7 +11,6 @@ import {
   doesTokenExist,
   fetchReserves,
   getAccount,
-  getBalanceAndSymbol,
   getERC20,
   getFactory,
   getLatestBlock,
@@ -91,11 +90,14 @@ const ConnectMetaMaskButton: React.FC<Props> = ({ content, onClick }) => {
 
   async function setupConnection() {
     try {
+      console.log("SET UP CONNECTION")
+
       network.provider = getProvider();
 
       network.signer = await getSigners(network.provider);
 
       const account = await getAccount();
+
       network.account = account;
 
       const chainId = await getNetwork(network.provider);
@@ -153,7 +155,7 @@ const ConnectMetaMaskButton: React.FC<Props> = ({ content, onClick }) => {
       dispatch(setFactory(network.factory));
       dispatch(setCoins(network.coins));
       // saveNetworkToLocalStorage(network);
-
+      
     } catch (err) {
       // alert(`${err}`);
     }
@@ -230,7 +232,11 @@ const ConnectMetaMaskButton: React.FC<Props> = ({ content, onClick }) => {
     if (networkGlobalState.provider) {
       if (window.ethereum) {
         window.ethereum.on("accountsChanged", (accounts) => {
-          dispatch(setAccount((accounts as string[])[0]));
+          window.location.reload();
+
+          // console.log("On Ethereum Account Changed", accounts)
+          // dispatch(setAccount((accounts as string[])[0]));
+          handleConnect();
         });
       }      
     }

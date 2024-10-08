@@ -5,18 +5,16 @@ import {formatAmount, formatBalance, formatReserve} from "../../utils/format"
 import TokensModal from "../../modal/TokensModal";
 import Header from "../../components/layout/Header";
 import AmountInputField from "../../components/input/AmountInputField";
-import TokenSwapHeader from "./TokenSwapHeader";
 import ConnectMetaMaskButton from "../../components/button/ConnectMetaMaskButton";
 import { AppDispatch, RootState } from "../../state/store";
-import { TokenAmountInfo, TokenPair } from "../../types/tokenPair";
+import { TokenAmountInfo } from "../../types/tokenPair";
 
 import { getAmountIn, getAmountOut, getBalance, getERC20, getPairByTokensAddress, getReserves, isERC20Token, isValidAddress, swapTokens } from "../../utils/ethereumFunctions";
 
-import { setAmount, setBalance, setToken } from "../../state/tokenPair/tokenPairSlice";
-import { setAccount } from "../../state/blockchain/networkSlice";
+import { setAmount, setBalance } from "../../state/tokenPair/tokenPairSlice";
 import ComponentHeader from "../ComponentHeader";
 import { Contract } from "ethers";
-import { DEFAULT_AMOUNT, DEFAULT_RESERVE, DEFAULT_USER_BALANCE, DEFAULT_ALERT_DESC, DEFAULT_ALERT_DURATION, DEFAULT_TOKEN_INTERFACE} from "../../utils/defaultValue";
+import { DEFAULT_AMOUNT, DEFAULT_RESERVE, DEFAULT_USER_BALANCE, DEFAULT_ALERT_DESC, DEFAULT_ALERT_DURATION} from "../../utils/defaultValue";
 import { Alert, Level } from "../../types/alert";
 
 
@@ -54,10 +52,10 @@ export default function TokenSwapPage() {
         tokenAddress.address,
         networkGlobalState.signer!,
       );
-      if (balance) {
+      // if (balance) {
         dispatch(setBalance({ index: 0, balance: balance.toString() }));
         setUserTokenBalance0(balance);
-      }
+      // }
     } else {
       const tokenAddress = tokenSwapPair[1].tokenInterface;
       const balance: number = await getBalance(
@@ -65,15 +63,29 @@ export default function TokenSwapPage() {
         tokenAddress.address,
         networkGlobalState.signer!,
       );
-      if (balance) {
+      // if (balance) {
         dispatch(setBalance({ index: 1, balance: balance.toString() }));
         setUserTokenBalance1(balance);
-      }
+      // }
     }
   }
   
+  const handleTokenAmountChange =(index: number) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!isNaN(+e.target.value) && e.target.value != ".") {
+      setActiveInput(index);
+
+      if (index === 0) {
+        setFieldAmount0Value(e.target.value);
+      } else {
+        setFieldAmount1Value(e.target.value);
+      }
+    } else {
+      // alert("Don't type text here")
+      AlertTypeText()
+    }
+  };
+  
   async function handleReserve() {
-      
       const tokenAddress0 = tokenSwapPair[0].tokenInterface.address;
       const tokenAddress1 = tokenSwapPair[1].tokenInterface.address;
 
@@ -85,110 +97,8 @@ export default function TokenSwapPage() {
 
       //NOTE: INTENTIONALLY
       setReserves0(reserves.token1);       
-      setReserves1(reserves.token0);       
-    
+      setReserves1(reserves.token0);         
   }
-
-  function toggleModal(index: number) {
-    tokenModalIndex.current = index;
-    setShowModal(!showModal);
-  }
-
-  const handleTokenAmountChange =(index: number) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!isNaN(+e.target.value) && e.target.value != ".") {
-      setActiveInput(index);
-
-      if (index === 0) {
-        setFieldAmount0Value(e.target.value);
-      } else {
-        setFieldAmount1Value(e.target.value);
-      }
-    } else {
-      alert("Don't type text here")
-    }
-  };
-
-  function checkConnected(): boolean {
-    return account != null ? true : false;
-  }
-
-  const checkBothTokenSelected = useCallback((): boolean => {
-    if (
-      tokenSwapPair[0].tokenInterface.symbol !== "TKN" &&
-      tokenSwapPair[1].tokenInterface.symbol !== "TKN"
-    ) {
-      return true;
-    }
-    return false;
-  }, [tokenSwapPair]);
-
-  async function checkAmountOut() {
-    const address1: string = tokenSwapPair[0].tokenInterface.address;
-    const address2: string = tokenSwapPair[1].tokenInterface.address;
-    const amountIn: number = fieldAmount0Value;
-
-    if (!networkGlobalState.signer || !networkGlobalState.router || !isERC20Token(address1, networkGlobalState.signer) || !isERC20Token(address2, networkGlobalState.signer)) {
-      console.log("NETWORK MISSING")
-      console.log(networkGlobalState)
-      return;
-    }
-    if (!amountIn) {
-      console.log("Missing Amount In")
-      return;
-    }
-    const amountOut = await getAmountOut(address1, address2, amountIn.toString(), networkGlobalState.router!);
-    setFieldAmount1Value(amountOut);
-    return amountOut.toString();
-  }
-  async function checkAmountIn() {
-    
-    const address1: string = tokenSwapPair[0].tokenInterface.address;
-    const address2: string = tokenSwapPair[1].tokenInterface.address;
-    const amountOut: string = fieldAmount1Value.toString();
-
-    const amountIn: number = await getAmountIn(address1, address2, amountOut, networkGlobalState.router!);
-        
-    return amountIn;
-  }
-
-  const AlertExceedBalance = () => {
-
-    alertRef.current.description = "Exceed Your Balance Amount"
-    alertRef.current.level = Level.WARNING;
-
-    setShowAlert(true);
-
-    setTimeout(() => {
-      setShowAlert(false);
-    }, alertRef.current.duration);  
-  };
-  const AlertExceedReserve = () => {
-
-    alertRef.current.description = "Exceed Reserve Amount"
-    alertRef.current.level = Level.WARNING;
-
-    setShowAlert(true);
-
-    setTimeout(() => {
-      setShowAlert(false);
-    }, alertRef.current.duration);  
-  };
-  const AlertPairDoesNotExist = async (addressToken0: string, addressToken1: string, factory: Contract) => {
-    if (!(await getPairByTokensAddress(addressToken0, addressToken1, factory!))) {
-
-      alertRef.current.description = "Pair doesn't exist"
-      alertRef.current.level = Level.WARNING;
-
-      setShowAlert(true);
-
-      setTimeout(() => {
-        setShowAlert(false);
-      }, alertRef.current.duration);  
-        
-    } else {
-      setShowAlert(false); // Hide alert if pair exists
-    }
-  };
   const handleSwap = async () => {
     if (
       typeof window != "undefined" &&
@@ -199,7 +109,7 @@ export default function TokenSwapPage() {
       const factory = networkGlobalState.factory;
 
       if (!(await getPairByTokensAddress(address0, address1, factory!))) {
-        AlertPairDoesNotExist(address0, address1, factory!)    
+        AlertPairDoesNotExist()    
       }
 
       console.log("Starting swap process...");
@@ -257,6 +167,69 @@ export default function TokenSwapPage() {
       alert("Please install metamask");
     }
 };
+
+  function toggleModal(index: number) {
+    tokenModalIndex.current = index;
+    setShowModal(!showModal);
+  }
+
+
+  function checkConnected(): boolean {
+    return account != null ? true : false;
+  }
+  const checkBothTokenSelected = useCallback((): boolean => {
+    if (
+      tokenSwapPair[0].tokenInterface.symbol !== "TKN" &&
+      tokenSwapPair[1].tokenInterface.symbol !== "TKN"
+    ) {
+      return true;
+    }
+    return false;
+  }, [tokenSwapPair]);
+
+  const AlertTypeText = () => {
+    alertRef.current.description = "Don't type text here"
+    alertRef.current.level = Level.ERROR;
+
+    setShowAlert(true);
+
+    setTimeout(() => {
+      setShowAlert(false);
+    }, alertRef.current.duration);  
+  };
+  const AlertExceedBalance = () => {
+    alertRef.current.description = "Exceed Your Balance Amount"
+    alertRef.current.level = Level.WARNING;
+
+    setShowAlert(true);
+
+    setTimeout(() => {
+      setShowAlert(false);
+    }, alertRef.current.duration);  
+  };
+  const AlertExceedReserve = () => {
+
+    alertRef.current.description = "Exceed Reserve Amount"
+    alertRef.current.level = Level.WARNING;
+
+    setShowAlert(true);
+
+    setTimeout(() => {
+      setShowAlert(false);
+    }, alertRef.current.duration);  
+  };
+  const AlertPairDoesNotExist = async () => {
+
+      alertRef.current.description = "Pair doesn't exist"
+      alertRef.current.level = Level.WARNING;
+
+      setShowAlert(true);
+
+      setTimeout(() => {
+        setShowAlert(false);
+      }, alertRef.current.duration);  
+      
+  };
 
   // NOTE: CALC AMOUNT 1 GIVEN AMOUNT 0 
   useEffect(() => {
@@ -345,7 +318,6 @@ export default function TokenSwapPage() {
       if (!amountOut) {
         return setFieldAmount0Value(0);
       }
-      console.log ("----Pass All Check: Use Effect For Interacting with Token 1------")
 
       async function amountIn() {
         const amountOutString = amountOut.toString();
@@ -422,8 +394,6 @@ export default function TokenSwapPage() {
 
   // NOTE: For changing TOKEN SYMBOL
   useEffect(() => {
-    console.log ("----Use Effect For Checking Token Swap Pair legit------")
-
     const factory = networkGlobalState.factory;
     if (!factory) {
       return;
@@ -433,19 +403,7 @@ export default function TokenSwapPage() {
     
     async function checkPairExist() {
         if (!(await getPairByTokensAddress(address0, address1, factory!))) {
-          console.log ("----Token Swap Pair NOT LEGIT------")
-          AlertPairDoesNotExist(address0, address1, factory!)    
-          //TODO: Disable
-          
-          // setFieldAmount0Value(0)
-          // setFieldAmount0Value(1)
-          // dispatch(setToken({index: 0, token: DEFAULT_TOKEN_INTERFACE}))
-          // dispatch(setToken({index: 1, token: DEFAULT_TOKEN_INTERFACE}))
-          
-        }
-        else {
-          //TODO: Enable
-          console.log ("----Token Swap Pair LEGIT------")
+          AlertPairDoesNotExist()    
         }
     }
     
@@ -498,8 +456,8 @@ export default function TokenSwapPage() {
             >
               <AmountInputField
                 index={0}
-                amount={(formatAmount(fieldAmount0Value))}
-                balance={formatBalance(userTokenBalance0)}
+                amount={(formatAmount(fieldAmount0Value.toString()))}
+                balance={formatBalance(userTokenBalance0.toString())}
                 reserve={formatReserve(reserves0.toString())}
                 symbol={tokenSwapPair[0].tokenInterface.symbol}
                 onClick={() => toggleModal(0)}
@@ -509,9 +467,9 @@ export default function TokenSwapPage() {
               -------------------------------------------------
               <AmountInputField
                 index={1}
-                amount={(formatAmount(fieldAmount1Value))}
+                amount={(formatAmount(fieldAmount1Value.toString()))}
 
-                balance={formatBalance(userTokenBalance1)}
+                balance={formatBalance(userTokenBalance1.toString())}
                 reserve={formatReserve(reserves1.toString())}
                 symbol={tokenSwapPair[1].tokenInterface.symbol}
                 onClick={() => toggleModal(1)}

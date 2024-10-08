@@ -45,10 +45,11 @@ export async function getAccount() {
     })) as string[] | undefined;
 
     if (accounts && accounts.length > 0) {
-      const defaultAccount = import.meta.env.VITE_USER_ADDRESS;
-      if (defaultAccount in accounts) {
-        return defaultAccount
-      }
+      // const defaultAccount = import.meta.env.VITE_USER_ADDRESS;
+      // if (defaultAccount in accounts) {
+      //   return defaultAccount
+      // }
+      console.log("accounts", accounts)
       return accounts[0];
     } else {
       alert("No account found");
@@ -184,11 +185,19 @@ export async function fetchReserves(
       (await pairContract.token0()) === addressToken1 ? reservesRaw[0] : reservesRaw[1],
       (await pairContract.token1()) === addressToken2 ? reservesRaw[1] : reservesRaw[0],
     ];
-
+    // console.log("RESULTS", results)
+    // console.log("RESULTS [0] UPDATED", Number(ethers.utils.formatUnits(results[0])))
+    // console.log("RESULTS [1] UPDATED", ethers.utils.formatEther(results[1]))
+    // console.log("RESULTS [0]", (results[0] * 10 ** (-coin1Decimals)))
+    // console.log("RESULTS [0]",  (results[1] * 10 ** (-coin2Decimals)))
     // Scale each to the right decimal place
+    // return [
+    //   (results[0] * 10 ** (-coin1Decimals)),
+    //   (results[1] * 10 ** (-coin2Decimals))
+    // ]
     return [
-      (results[0] * 10 ** (-coin1Decimals)),
-      (results[1] * 10 ** (-coin2Decimals))
+      Number(ethers.utils.formatUnits(results[0])),
+      Number(ethers.utils.formatUnits(results[1])),
     ]
   } catch (err) {
     console.log("error!");
@@ -258,10 +267,13 @@ export async function getBalance(
 ): Promise<number> {
 
   try {
+    console.log("accountAddress", accountAddress)
+    console.log("tokenAddress", tokenAddress)
+    console.log("signer", signer);
     const token = new Contract(tokenAddress, ERC20.abi, signer);
 
     const tokenDecimals = await getDecimals(token);
-    
+
     const balanceRaw = await token.balanceOf(accountAddress);
 
     const balanceString = (balanceRaw * 10 ** (-tokenDecimals));
@@ -307,6 +319,7 @@ export async function getPairByTokensAddress(address1: string, address2: string,
   // const pair = new Contract(pairAddress, PAIR.abi, signer);
   // if 
 }
+
 // This function returns the reserves stored in a the liquidity pool between the token of address1 and the token
 // of address2, as well as the liquidity tokens owned by accountAddress for that pair.
 //    `address1` - An Ethereum address of the token to trade from (either a token or AUT)
@@ -333,7 +346,10 @@ export async function getReserves(
     if (pairAddress !== '0x0000000000000000000000000000000000000000') {
 
       const reservesRaw = await fetchReserves(address1, address2, pair, signer);
-      const liquidityTokens_BN: ethers.BigNumber = await pair.balanceOf(accountAddress);
+      // const liquidityTokens_BN: ethers.BigNumber = await pair.balanceOf(accountAddress);
+      // const liquidityTokens: number = Number(ethers.utils.formatEther(liquidityTokens_BN));
+
+      const liquidityTokens_BN: ethers.BigNumber = await pair.totalSupply();
       const liquidityTokens: number = Number(ethers.utils.formatEther(liquidityTokens_BN));
 
       return {
@@ -370,7 +386,7 @@ export async function getAmountIn(
     const amount_in = ethers.utils.formatEther(values_in[0]);
 
     return Number(amount_in);
-    
+
   } catch (error) {
     console.log("Error", error)
     return 0;
@@ -441,9 +457,9 @@ export async function BurnLiquidity(
 
     const token1Decimals = await getDecimals(token1);
     const token2Decimals = await getDecimals(token2);
-    const Getliquidity = (liquidityAmount: number)=>{
-      if (liquidityAmount < 0.001){
-        return ethers.BigNumber.from(liquidityAmount*10**18);
+    const Getliquidity = (liquidityAmount: number) => {
+      if (liquidityAmount < 0.001) {
+        return ethers.BigNumber.from(liquidityAmount * 10 ** 18);
       }
       return ethers.utils.parseUnits(String(liquidityAmount), 18);
     }
@@ -452,11 +468,12 @@ export async function BurnLiquidity(
 
     const amount1Min = ethers.utils.parseUnits(String(amount1min), token1Decimals);
     const amount2Min = ethers.utils.parseUnits(String(amount2min), token2Decimals);
-  
+
     const pairAddress = await factory.pairs(addressToken1, addressToken2);
     const pair = new Contract(pairAddress, PAIR.abi, signer);
 
     await pair.approve(routerContract.address, liquidity);
+    console.log("IMPORTANT")
 
     console.log([
       addressToken1,
@@ -466,13 +483,13 @@ export async function BurnLiquidity(
       Number(amount2Min),
       account,
     ]);
-    
+
     const removeLiquidityTx = await routerContract.removeLiquidity(
       addressToken1,
       addressToken2,
       liquidity,
-      amount1Min,
       amount2Min,
+      amount1Min,
       account
     )
     await removeLiquidityTx.wait(); // Wait for the removeLiquidity transaction to be confirmed
@@ -481,6 +498,8 @@ export async function BurnLiquidity(
     console.log("Error in Add Liquidity function: ", error)
   }
 }
+import { BigNumber } from 'ethers';
+
 export async function quoteRemoveLiquidity(
   address1: string,
   address2: string,
@@ -496,13 +515,15 @@ export async function quoteRemoveLiquidity(
   const reserveA = reservesRaw[0];
   const reserveB = reservesRaw[1];
 
+  console.log("reservesRaw", reservesRaw)
 
   const _totalSupply = await pair.totalSupply();
   const totalSupply = Number(ethers.utils.formatEther(_totalSupply));
 
   const Aout = (Number(reserveA) * Number(liquidity)) / totalSupply;
   const Bout = (Number(reserveB) * Number(liquidity)) / totalSupply;
-
+  console.log("AOUT", Aout)
+  console.log("Bout", Bout)
   return [liquidity, (Aout.toString()), (Bout.toString())];
 }
 export async function PriceVsDollar(tokenAddress: string, factory: Contract, signer: ethers.Signer) {

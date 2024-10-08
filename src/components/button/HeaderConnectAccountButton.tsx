@@ -18,15 +18,8 @@ interface Props {
   className: string
 }
 import {
-  checkCode,
-  connectWallet,
-  doesTokenExist,
-  fetchReserves,
   getAccount,
-  getBalanceAndSymbol,
-  getERC20,
   getFactory,
-  getLatestBlock,
   getNetwork,
   getPair,
   getProvider,

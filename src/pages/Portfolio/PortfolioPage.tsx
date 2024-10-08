@@ -90,6 +90,7 @@ interface Transaction {
   Token1Symbol: string;
   Token2Symbol: string;
   Pair: string;
+  Liquidity: string;
 }
 
 function timestampToVNDate(timestamp: string) {
@@ -183,7 +184,7 @@ const PortfolioPage: React.FC = () => {
               Pair: `${burn.pair.token0.symbol}-${burn.pair.token1.symbol}`,
               Token1Symbol: `${burn.pair.token0.symbol}`,
               Token2Symbol: `${burn.pair.token1.symbol}`,
-
+              Liquidity: `${burn.liquidity}`,
             });
           }
           });
@@ -203,6 +204,7 @@ const PortfolioPage: React.FC = () => {
                 Pair: `${mint.pair.token0.symbol}-${mint.pair.token1.symbol}`,
                 Token1Symbol: `${mint.pair.token0.symbol}`,
                 Token2Symbol: `${mint.pair.token1.symbol}`,
+                Liquidity: `${mint.liquidity}`,
               });
             }
           });
@@ -225,6 +227,7 @@ const PortfolioPage: React.FC = () => {
               Pair: `${swap.pair.token0.symbol}-${swap.pair.token1.symbol}`,
               Token1Symbol: `${swap.pair.token0.symbol}`,
               Token2Symbol: `${swap.pair.token1.symbol}`,
+              Liquidity: "0",
             });
           }
           });
@@ -309,11 +312,11 @@ const PortfolioPage: React.FC = () => {
   const getRowClassName = (name: string) => {
     switch (name) {
       case 'Mint':
-        return 'bg-red-100';
+        return '';
       case 'Burn':
-        return 'bg-green-100 ';
+        return 'bg-green-50 ';
       case 'Swap':
-        return 'bg-gray-100 text-green-600'; // Adjusted for clarity
+        return 'bg-gray-200'; // Adjusted for clarity
       default:
         return '';
     }
@@ -340,6 +343,8 @@ const PortfolioPage: React.FC = () => {
               <th>To </th>
               <th>Amount 1</th>
               <th>Amount 2</th>
+              <th>Amount LP</th>
+
             </tr>
           </thead>
           <tbody className="">
@@ -349,18 +354,21 @@ const PortfolioPage: React.FC = () => {
                 : transaction.From;
               return (
                 <tr 
-                className={`${getRowClassName(transaction.Name)} hover:bg-blue-300`} 
+                className={`${getRowClassName(transaction.Name)} hover:bg-pink-100`} 
                 key={`${transaction.TransactionID}-${transaction.Time}`} // Using a more reliable key
               >
                   <th>{transaction.Name}</th>
                   <td>{transaction.Time}</td>
                   <td>{formatAddress(transaction.From)}</td>
                   <td>{formatAddress(transactionTo)}</td>
-                  <td>
+                  <td className={`${transaction.Name == "Mint" || transaction.Name =='Swap' ? 'text-red-500 font-semibold': transaction.Name == 'Burn' ? 'text-green-700 font-semibold':' '}`}>
                     {`${formatReserve(transaction.AmountToken1)} ${transaction.Token1Symbol}`}
                   </td>
-                  <td>
+                  <td className={`${transaction.Name == "Mint" ? 'text-red-500 font-semibold': transaction.Name == 'Burn' || transaction.Name == 'Swap' ? 'text-green-700 font-semibold': ''}`}>
                     {`${formatReserve(transaction.AmountToken2)} ${transaction.Token2Symbol}`}
+                  </td>
+                  <td className={`${transaction.Name == "Burn" || transaction.Name =='Swap' ? 'text-red-500 font-semibold': 'text-green-700 font-semibold'}`}>
+                    {`${formatReserve(transaction.Liquidity)} ${transaction.Token1Symbol}/${transaction.Token2Symbol}`}
                   </td>
                 </tr>
               );

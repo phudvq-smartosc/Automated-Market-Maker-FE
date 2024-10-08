@@ -62,7 +62,8 @@ export const GET_TOKEN_PAIRS = gql`
   }
 `;
 
-export const LP_COUNT = gql`query CountLP {
+export const LP_COUNT = gql`
+query CountLP {
   mints {
     sender
     pair {
