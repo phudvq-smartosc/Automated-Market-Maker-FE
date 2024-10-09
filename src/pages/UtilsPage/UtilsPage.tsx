@@ -10,7 +10,7 @@ import {
   getProvider,
   getRouter,
   getSigners,
-  PriceVsDollar,
+  PriceVsDollarV2,
 } from "../../utils/ethereumFunctions";
 import COINS from "../../utils/coins";
 import {
@@ -39,7 +39,7 @@ const UtilPage: React.FC = () => {
       const coins = COINS.get(chainId);
       const factoryAddress = config.factoryAddress;
       const factory = getFactory(factoryAddress, signer);
-  
+
       // Return an object with the new state
       return {
         provider,
@@ -55,11 +55,11 @@ const UtilPage: React.FC = () => {
       throw error; // Re-throw the error to handle it in handleConnect
     }
   }
-  
+
   const handleConnect = async () => {
     try {
       const newNetworkState = await setupConnection();
-  
+
       // Dispatch actions with the new state
       dispatch(setProvider(newNetworkState.provider));
       dispatch(setSigner(newNetworkState.signer));
@@ -68,7 +68,7 @@ const UtilPage: React.FC = () => {
       dispatch(setRouter(newNetworkState.router));
       dispatch(setFactory(newNetworkState.factory));
       dispatch(setCoins(newNetworkState.coins));
-      
+
       // Optionally save to local storage
       // saveNetworkToLocalStorage(newNetworkState);
     } catch (err) {
@@ -84,10 +84,12 @@ const UtilPage: React.FC = () => {
     }
   };
   const testGetDollarPrice = async () => {
-    
-
-    if (networkGlobalState && networkGlobalState.factory  && networkGlobalState.signer) {
-      await PriceVsDollar(
+    if (
+      networkGlobalState &&
+      networkGlobalState.factory &&
+      networkGlobalState.signer
+    ) {
+      await PriceVsDollarV2(
         "0x6854EdB34f8A62ef3a9631238C61798053A39014",
         networkGlobalState.factory,
         networkGlobalState.signer,
@@ -105,7 +107,7 @@ const UtilPage: React.FC = () => {
 
   useEffect(() => {
     console.log("Network Global State Updated:", networkGlobalState);
-  }, [networkGlobalState]); 
+  }, [networkGlobalState]);
 
   return (
     <>

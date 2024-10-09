@@ -178,6 +178,18 @@ export const PAIR_HISTORY_QUERY = gql`
   query PairHistory($id: ID!) {
     zuniswapV2Pair(id: $id) {
       id
+      reserve0
+      reserve1
+      token0Price
+      token1Price
+      token0 {
+        symbol
+        id
+      }
+      token1 {
+        id
+        symbol
+      }
       swaps {
         amount1Out
         amount1In

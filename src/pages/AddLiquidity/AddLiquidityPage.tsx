@@ -17,11 +17,40 @@ import { setBalance } from "../../state/tokenPair/tokenPairSlice";
 import TokensModal from "../../modal/TokensModal";
 import PoolShare from "./PoolShare";
 import ConnectMetaMaskButton from "../../components/button/ConnectMetaMaskButton";
-import { Contract } from "ethers";
 import AmountInputFieldMin from "../../components/input/AmountInputFieldMin";
-import { DEFAULT_AMOUNT, DEFAULT_RESERVE, DEFAULT_USER_BALANCE, DEFAULT_ALERT_DESC, DEFAULT_ALERT_DURATION, DEFAULT_TOKEN_SYMBOL, DEFAULT_TOKEN_ADDRESS, DEFAULT_PRICE, DEFAULT_SHARE_PERCENT, DEFAULT_USER_ACCOUNT} from "../../utils/defaultValue";
+import {
+  DEFAULT_AMOUNT,
+  DEFAULT_RESERVE,
+  DEFAULT_USER_BALANCE,
+  DEFAULT_ALERT_DESC,
+  DEFAULT_ALERT_DURATION,
+  DEFAULT_TOKEN_SYMBOL,
+  DEFAULT_TOKEN_ADDRESS,
+  DEFAULT_PRICE,
+  DEFAULT_SHARE_PERCENT,
+  DEFAULT_USER_ACCOUNT,
+} from "../../utils/defaultValue";
 import { Alert, Level } from "../../types/alert";
+import {
+  getAccount,
+  getFactory,
+  getNetwork,
+  getProvider,
+  getRouter,
+  getSigners,
+} from "../../utils/ethereumFunctions";
 
+import {
+  setAccount,
+  setChainID,
+  setCoins,
+  setFactory,
+  setProvider,
+  setRouter,
+  setSigner,
+} from "../../state/blockchain/networkSlice";
+import { config } from "../../config/envConfig";
+import COINS from "../../utils/coins";
 interface PricePair {
   token0: string;
   token1: string;
@@ -36,29 +65,43 @@ const AddLiquidityPage: React.FC = () => {
     (state: RootState) => state.tokenPair.tokenPairInfo,
   );
 
-  const alertRef = useRef<Alert>({description: DEFAULT_ALERT_DESC, level: Level.INFO, duration: DEFAULT_ALERT_DURATION })
+  const alertRef = useRef<Alert>({
+    description: DEFAULT_ALERT_DESC,
+    level: Level.INFO,
+    duration: DEFAULT_ALERT_DURATION,
+  });
   const [showAlert, setShowAlert] = useState<boolean>(false);
 
   const tokenModalIndex = useRef<number>(-1);
   const [showModal, setShowModal] = useState<boolean>(false);
 
-  const [fieldAmount0Value, setFieldAmount0Value] = useState<number>(DEFAULT_AMOUNT);
-  const [fieldAmount1Value, setFieldAmount1Value] = useState<number>(DEFAULT_AMOUNT);
+  const [fieldAmount0Value, setFieldAmount0Value] =
+    useState<number>(DEFAULT_AMOUNT);
+  const [fieldAmount1Value, setFieldAmount1Value] =
+    useState<number>(DEFAULT_AMOUNT);
 
-  const [fieldAmount0MinValue, setFieldAmount0MinValue] = useState<number>(DEFAULT_AMOUNT);
-  const [fieldAmount1MinValue, setFieldAmount1MinValue] = useState<number>(DEFAULT_AMOUNT);
+  const [fieldAmount0MinValue, setFieldAmount0MinValue] =
+    useState<number>(DEFAULT_AMOUNT);
+  const [fieldAmount1MinValue, setFieldAmount1MinValue] =
+    useState<number>(DEFAULT_AMOUNT);
 
-  const [userTokenBalance0, setUserTokenBalance0] = useState<number>(DEFAULT_USER_BALANCE);
-  const [userTokenBalance1, setUserTokenBalance1] = useState<number>(DEFAULT_USER_BALANCE);
+  const [userTokenBalance0, setUserTokenBalance0] =
+    useState<number>(DEFAULT_USER_BALANCE);
+  const [userTokenBalance1, setUserTokenBalance1] =
+    useState<number>(DEFAULT_USER_BALANCE);
 
   const [reserves0, setReserves0] = useState<number>(DEFAULT_RESERVE);
   const [reserves1, setReserves1] = useState<number>(DEFAULT_RESERVE);
 
-  const [priceToken0Over1, setPriceToken0Over1] = useState<number>(DEFAULT_PRICE);
-  const [priceToken1Over0, setPriceToken1Over0] = useState<number>(DEFAULT_PRICE);
-  
-  const [poolSharePercent, setPoolSharePercent] = useState<number>(DEFAULT_SHARE_PERCENT);
-  
+  const [priceToken0Over1, setPriceToken0Over1] =
+    useState<number>(DEFAULT_PRICE);
+  const [priceToken1Over0, setPriceToken1Over0] =
+    useState<number>(DEFAULT_PRICE);
+
+  const [poolSharePercent, setPoolSharePercent] = useState<number>(
+    DEFAULT_SHARE_PERCENT,
+  );
+
   async function handleBalance(index: number) {
     if (
       tokenSwapPair[index].tokenInterface.symbol != "TKN" &&
@@ -74,8 +117,8 @@ const AddLiquidityPage: React.FC = () => {
           networkGlobalState.signer!,
         );
         // if (balance) {
-          dispatch(setBalance({ index: 0, balance: balance.toString() }));
-          setUserTokenBalance0(balance);
+        dispatch(setBalance({ index: 0, balance: balance.toString() }));
+        setUserTokenBalance0(balance);
         // }
       } else {
         const tokenAddress = tokenSwapPair[1].tokenInterface;
@@ -86,34 +129,31 @@ const AddLiquidityPage: React.FC = () => {
         );
 
         // if (balance) {
-          dispatch(setBalance({ index: 1, balance: balance.toString() }));
-          setUserTokenBalance1(balance);
+        dispatch(setBalance({ index: 1, balance: balance.toString() }));
+        setUserTokenBalance1(balance);
         // }
       }
     }
   }
   useEffect(() => {
-    console.log("------------USE EFFECT TO CHANGE BALANCE IS CALLED")
+    console.log("------------USE EFFECT TO CHANGE BALANCE IS CALLED");
     handleBalance(0);
   }, [tokenSwapPair, networkGlobalState]);
   useEffect(() => {
-    console.log("------------USE EFFECT TO CHANGE BALANCE IS CALLED")
+    console.log("------------USE EFFECT TO CHANGE BALANCE IS CALLED");
 
     handleBalance(1);
-
   }, [tokenSwapPair[1].tokenInterface.symbol, networkGlobalState]);
 
   async function handleTokenPriceOverAnother() {
     if (
       tokenSwapPair[0].tokenInterface.symbol != DEFAULT_TOKEN_SYMBOL &&
       tokenSwapPair[1].tokenInterface.symbol != DEFAULT_TOKEN_SYMBOL &&
-      tokenSwapPair[0].tokenInterface.address!= DEFAULT_TOKEN_ADDRESS && 
-      tokenSwapPair[1].tokenInterface.address!= DEFAULT_TOKEN_ADDRESS && 
-
+      tokenSwapPair[0].tokenInterface.address != DEFAULT_TOKEN_ADDRESS &&
+      tokenSwapPair[1].tokenInterface.address != DEFAULT_TOKEN_ADDRESS &&
       networkGlobalState.factory &&
       networkGlobalState.signer &&
       networkGlobalState.account
-
     ) {
       const addressToken0 = tokenSwapPair[0].tokenInterface.address;
       const addressToken1 = tokenSwapPair[1].tokenInterface.address;
@@ -141,10 +181,10 @@ const AddLiquidityPage: React.FC = () => {
           factoryContract,
           signer,
         );
-        console.log("signer", signer)
-        console.log("factoryContract", factoryContract)
-        console.log("Mint Amount", mintAmount)
-        console.log("liquidityTokens", liquidityTokens)
+        console.log("signer", signer);
+        console.log("factoryContract", factoryContract);
+        console.log("Mint Amount", mintAmount);
+        console.log("liquidityTokens", liquidityTokens);
         // console.log("Mint Amount", mintAmount)
         // console.log("Mint Amount", mintAmount)
 
@@ -156,15 +196,12 @@ const AddLiquidityPage: React.FC = () => {
     if (
       tokenSwapPair[0].tokenInterface.symbol != DEFAULT_TOKEN_SYMBOL &&
       tokenSwapPair[1].tokenInterface.symbol != DEFAULT_TOKEN_SYMBOL &&
-      tokenSwapPair[0].tokenInterface.address != DEFAULT_TOKEN_ADDRESS && 
+      tokenSwapPair[0].tokenInterface.address != DEFAULT_TOKEN_ADDRESS &&
       tokenSwapPair[1].tokenInterface.address != DEFAULT_TOKEN_ADDRESS &&
-      
       networkGlobalState.account &&
       networkGlobalState.factory &&
       networkGlobalState.signer
-    ) 
-    {
-
+    ) {
       const tokenAddress0 = tokenSwapPair[0].tokenInterface.address;
       const tokenAddress1 = tokenSwapPair[1].tokenInterface.address;
 
@@ -182,9 +219,7 @@ const AddLiquidityPage: React.FC = () => {
       setReserves0(reserves.token0);
       setReserves1(reserves.token1);
     }
-
   }
-  
 
   function checkConnected(): boolean {
     return account != null ? true : false;
@@ -201,7 +236,11 @@ const AddLiquidityPage: React.FC = () => {
 
   const handleAmountChange =
     (index: number) => (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (!isNaN(+e.target.value) && e.target.value != "." && e.target.value != "0") {
+      if (
+        !isNaN(+e.target.value) &&
+        e.target.value != "." &&
+        e.target.value != "0"
+      ) {
         if (index === 0) {
           setFieldAmount0Value(Number(e.target.value) || 0);
         } else {
@@ -211,60 +250,65 @@ const AddLiquidityPage: React.FC = () => {
         alert("Don't type text here");
       }
     };
-    const AlertExceedExpectedAmount = () => {
-      alertRef.current.description = "Exceed Expected Amount"
-      alertRef.current.level = Level.ERROR;
-  
-      setShowAlert(true);
-  
-      setTimeout(() => {
-        setShowAlert(false);
-      }, alertRef.current.duration);  
-    };
-    const AlertTypeText = () => {
-      alertRef.current.description = "Don't type text here"
-      alertRef.current.level = Level.ERROR;
-  
-      setShowAlert(true);
-  
-      setTimeout(() => {
-        setShowAlert(false);
-      }, alertRef.current.duration);  
-    };
-  const handleAmountMinChange = (index: number) => (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (!isNaN(+e.target.value) && e.target.value != "." && e.target.value != "0") {
+  const AlertExceedExpectedAmount = () => {
+    alertRef.current.description = "Exceed Expected Amount";
+    alertRef.current.level = Level.ERROR;
+
+    setShowAlert(true);
+
+    setTimeout(() => {
+      setShowAlert(false);
+    }, alertRef.current.duration);
+  };
+  const AlertTypeText = () => {
+    alertRef.current.description = "Don't type text here";
+    alertRef.current.level = Level.ERROR;
+
+    setShowAlert(true);
+
+    setTimeout(() => {
+      setShowAlert(false);
+    }, alertRef.current.duration);
+  };
+  const handleAmountMinChange =
+    (index: number) => (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (
+        !isNaN(+e.target.value) &&
+        e.target.value != "." &&
+        e.target.value != "0"
+      ) {
         if (index === 0) {
           if (Number(e.target.value) > fieldAmount0Value) {
-            AlertExceedExpectedAmount()
+            AlertExceedExpectedAmount();
             setFieldAmount0MinValue(0);
             return;
           }
           setFieldAmount0MinValue(Number(e.target.value));
         } else {
           if (Number(e.target.value) > fieldAmount1Value) {
-            AlertExceedExpectedAmount()
+            AlertExceedExpectedAmount();
             setFieldAmount1MinValue(0);
             return;
           }
           setFieldAmount1MinValue(Number(e.target.value));
         }
       } else {
-        AlertTypeText()
-    }
-  };
+        AlertTypeText();
+      }
+    };
   function toggleModal(index: number) {
     tokenModalIndex.current = index;
     setShowModal(!showModal);
   }
   const AlertExceedBalance = () => {
-    alertRef.current.description = "Exceed Your Balance Amount"
+    alertRef.current.description = "Exceed Your Balance Amount";
     alertRef.current.level = Level.WARNING;
 
     setShowAlert(true);
 
     setTimeout(() => {
       setShowAlert(false);
-    }, alertRef.current.duration);  
+    }, alertRef.current.duration);
   };
   async function handleAddLiquid() {
     console.log("Account:", networkGlobalState.account);
@@ -301,9 +345,9 @@ const AddLiquidityPage: React.FC = () => {
       fieldAmount1Value &&
       tokenSwapPair
     ) {
-     if (fieldAmount0MinValue > fieldAmount0Value) {
-      AlertExceedExpectedAmount();
-     }
+      if (fieldAmount0MinValue > fieldAmount0Value) {
+        AlertExceedExpectedAmount();
+      }
       await AddLiquidity(
         tokenSwapPair[0].tokenInterface.address,
         tokenSwapPair[1].tokenInterface.address,
@@ -322,15 +366,14 @@ const AddLiquidityPage: React.FC = () => {
     }
   }
   const AlertPairDoesNotExist = async () => {
-    alertRef.current.description = "Pair doesn't exist"
+    alertRef.current.description = "Pair doesn't exist";
     alertRef.current.level = Level.WARNING;
 
     setShowAlert(true);
 
     setTimeout(() => {
       setShowAlert(false);
-    }, alertRef.current.duration);  
-    
+    }, alertRef.current.duration);
   };
 
   useEffect(() => {
@@ -360,8 +403,8 @@ const AddLiquidityPage: React.FC = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       handleTokenPriceOverAnother();
-      handleBalance(0)
-      handleBalance(1)
+      handleBalance(0);
+      handleBalance(1);
     }, 3000);
 
     return () => clearInterval(interval);
@@ -372,36 +415,99 @@ const AddLiquidityPage: React.FC = () => {
     const factory = networkGlobalState.factory;
     const address0 = tokenSwapPair[0].tokenInterface.address;
     const address1 = tokenSwapPair[1].tokenInterface.address;
-    
+
     if (!factory) {
       return;
     }
-    if (address0 === DEFAULT_TOKEN_ADDRESS || address1 === DEFAULT_TOKEN_ADDRESS) {
+    if (
+      address0 === DEFAULT_TOKEN_ADDRESS ||
+      address1 === DEFAULT_TOKEN_ADDRESS
+    ) {
       return;
     }
     async function checkPairExist() {
-        if (!(await getPairByTokensAddress(address0, address1, factory!))) {
-          AlertPairDoesNotExist()    
-        }
+      if (!(await getPairByTokensAddress(address0, address1, factory!))) {
+        AlertPairDoesNotExist();
+      }
     }
-    
-    checkPairExist();
-  }, [networkGlobalState.factory, tokenSwapPair[0].tokenInterface.symbol, tokenSwapPair[1].tokenInterface.symbol])
 
+    checkPairExist();
+  }, [
+    networkGlobalState.factory,
+    tokenSwapPair[0].tokenInterface.symbol,
+    tokenSwapPair[1].tokenInterface.symbol,
+  ]);
+
+  async function setupConnection() {
+    try {
+      const provider = getProvider();
+      const signer = await getSigners(provider);
+      const account = await getAccount();
+      const chainId = await getNetwork(provider);
+      const routerAddress = config.routerAddress;
+      const router = getRouter(routerAddress, signer);
+      const coins = COINS.get(chainId);
+      const factoryAddress = config.factoryAddress;
+      const factory = getFactory(factoryAddress, signer);
+
+      // Return an object with the new state
+      return {
+        provider,
+        signer,
+        account,
+        chainID: chainId,
+        router,
+        coins,
+        factory,
+      };
+    } catch (error) {
+      console.log("Error in Set Up Connection", error);
+      throw error; // Re-throw the error to handle it in handleConnect
+    }
+  }
+  const handleConnect = async () => {
+    try {
+      const newNetworkState = await setupConnection();
+
+      // Dispatch actions with the new state
+      dispatch(setProvider(newNetworkState.provider));
+      dispatch(setSigner(newNetworkState.signer));
+      dispatch(setAccount(newNetworkState.account));
+      dispatch(setChainID(newNetworkState.chainID));
+      dispatch(setRouter(newNetworkState.router));
+      dispatch(setFactory(newNetworkState.factory));
+      dispatch(setCoins(newNetworkState.coins));
+
+      // Optionally save to local storage
+      // saveNetworkToLocalStorage(newNetworkState);
+    } catch (err) {
+      alert(`${err}`);
+    }
+  };
+
+  useEffect(() => {
+    console.log("In Use Effect: Handling Connection");
+    handleConnect();
+  }, []);
   return (
     <>
       {showAlert && (
-        <div role="alert" className={`absolute right-4 max-w-80 bottom-5 alert ${alertRef.current.level}`}>
+        <div
+          role="alert"
+          className={`alert absolute bottom-5 right-4 max-w-80 ${alertRef.current.level}`}
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="w-6 h-6 stroke-current shrink-0"
             fill="none"
-            viewBox="0 0 24 24">
+            viewBox="0 0 24 24"
+          >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth="2"
-              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
           </svg>
           <span>{alertRef.current.description}</span>
         </div>
@@ -450,7 +556,6 @@ const AddLiquidityPage: React.FC = () => {
                 onClick={() => toggleModal(1)}
                 onChange={handleAmountChange(1)}
                 onChangeMin={handleAmountMinChange(1)}
-
               />
               <div id="PoolShare" className="w-full">
                 <PoolShare

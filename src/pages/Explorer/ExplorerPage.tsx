@@ -86,7 +86,9 @@ export default function ExplorerPage() {
         if (networkGlobalState.provider) {
           if (window.ethereum) {
             window.ethereum.on("accountsChanged", (accounts) => {
-              dispatch(setAccount((accounts as string[])[0]));
+              window.location.reload();
+
+              // dispatch(setAccount((accounts as string[])[0]));
             });
           }      
         }

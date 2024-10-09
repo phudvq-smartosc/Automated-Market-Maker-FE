@@ -86,13 +86,19 @@ export default function TokenSwapPage() {
   };
   
   async function handleReserve() {
+
       const tokenAddress0 = tokenSwapPair[0].tokenInterface.address;
       const tokenAddress1 = tokenSwapPair[1].tokenInterface.address;
-
+      console.log("tokenAddress0", tokenAddress0)
+      console.log("tokenAddress0", tokenAddress1)
+      
       const factory = networkGlobalState.factory;
       const signer = networkGlobalState.signer;
       const account = networkGlobalState.account;
-
+      
+      console.log("factory", factory)
+      console.log("signer", signer)
+      console.log("account", account)
       const reserves = await getReserves(tokenAddress0, tokenAddress1, factory!, signer!, account!)
 
       //NOTE: INTENTIONALLY
@@ -444,7 +450,7 @@ export default function TokenSwapPage() {
           {/* TODO: Do Swap Component Separately */}
           <div
             id="SwapComponent"
-            className="px-5 border-4 border-black border-solid h-5/6 w-120 rounded-2xl bg-gradient-to-br from-indigo-100 to-indigo-300"
+            className="px-5 border-4 border-black border-solid h-5/6 w-120 rounded-2xl bg-gradient-to-br from-indigo-100 to-indigo-400"
           >
             <div id="SwapHeader" className="py-2">
               <ComponentHeader name="Swap"/>

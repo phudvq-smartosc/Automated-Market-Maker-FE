@@ -341,8 +341,10 @@ export async function getReserves(
 
   try {
     const pairAddress: string = await factory.pairs(address1, address2);
-    const pair = new Contract(pairAddress, PAIR.abi, signer);
+    console.log("pairAddress", pairAddress)
 
+    const pair = new Contract(pairAddress, PAIR.abi, signer);
+    console.log("PAIR", pair)
     if (pairAddress !== '0x0000000000000000000000000000000000000000') {
 
       const reservesRaw = await fetchReserves(address1, address2, pair, signer);
@@ -526,6 +528,29 @@ export async function quoteRemoveLiquidity(
   console.log("Bout", Bout)
   return [liquidity, (Aout.toString()), (Bout.toString())];
 }
+export async function PriceVsDollarV2(tokenAddress: string, factory: Contract, signer: ethers.Signer) {
+  //aka fetch reserver
+    const usdtAddress = import.meta.env.VITE_USDT;
+
+    const pairAddress: string = await factory.pairs(usdtAddress, tokenAddress);
+    if (pairAddress === '0x0000000000000000000000000000000000000000') {
+      alert("Pair doesn't exist");
+      return;
+    }
+    const pairContract = getPair(pairAddress, signer)
+
+    // Log reserves and other useful information
+    console.log("Token Address:", tokenAddress);
+    console.log("USDT Address:", usdtAddress);
+    console.log("Pair Address:", pairAddress);
+    const reserve = await fetchReserves(tokenAddress, usdtAddress, pairContract, signer);
+    console.log("reserve", reserve);
+    if (reserve[1] == 0) {
+      return 0;
+    }
+    return reserve[0] / reserve[1];
+}
+
 export async function PriceVsDollar(tokenAddress: string, factory: Contract, signer: ethers.Signer) {
   //aka fetch reserver
   for (const i in import.meta.env) {
