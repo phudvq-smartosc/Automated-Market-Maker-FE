@@ -1,39 +1,50 @@
-This is the document for the final project for SmartOSC internship term. 
-# TOPIC: AMM
+# React + TypeScript + Vite
 
-## Ý tưởng: 
-Tương tự **UNISWAP**. Cho phép user add liquidity cho 1 cặp token ERC20(token chưa có trong Pool). Sau khi được add, user có thể connect wallet để swap 2 token trong cặp với nhau theo công thức x*y = k. 
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-### Smart Contract:
-  1. ERC20 Contract: Quản lý các token ERC20.
-  2. Swap Contract: \
-    a. Quản lý việc thêm thanh khoản \
-    b. Hoán đổi token theo công thức **x*y = k.**
+Currently, two official plugins are available:
 
-### Backend (BE):
-1. Lưu trữ lịch sử giao dịch
-2. Lưu trữ thông tin giao dịch của người dùng \
-    a. thêm thanh khoản \
-    b. hoán đổi token.
-### Frontend (FE):
-  * Giao diện thêm thanh khoản: 
-  Người dùng có thể thêm thanh khoản cho một cặp token ERC20.
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-  ----------
-  * Giao diện swap: Cho phép người dùng hoán đổi hai token trong cặp với nhau.
-  ----------
+## Expanding the ESLint configuration
 
-  * Giao diện lịch sử giao dịch: Hiển thị lịch sử giao dịch của người dùng.
-  ----------
-  * Giao diện? kết nối MetaMask: Kết nối ví của người dùng với MetaMask để thực hiện giao dịch.
-  ------
-  * Giao diện Live Chart: Hiển thị biểu đồ trực tiếp về tỷ giá hoán đổi hiện tại.
-  * Tỷ giá hiện tại: Hiển thị tỷ giá hoán đổi hiện tại của cặp token.
+If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
 
-## Tóm tắt luồng hoạt động:
-1. Người dùng: Truy cập giao diện thêm thanh khoản và thêm thanh khoản cho một cặp token ERC20.
-2. Người dùng: Truy cập giao diện swap để hoán đổi hai token trong cặp với nhau.
-3. Smart Contract: Lưu trữ thanh khoản và cập nhật tỷ giá hoán đổi theo công thức x*y = k.
-4. Frontend: Gửi giao dịch hoán đổi đến smart contract và cập nhật lịch sử giao dịch.
-5. Frontend: Hiển thị lịch sử giao dịch, live chart và tỷ giá hoán đổi hiện tại.
-6. Backend: Lưu trữ lịch sử giao dịch của người dùng.
+- Configure the top-level `parserOptions` property like this:
+
+```js
+export default tseslint.config({
+  languageOptions: {
+    // other options...
+    parserOptions: {
+      project: ['./tsconfig.node.json', './tsconfig.app.json'],
+      tsconfigRootDir: import.meta.dirname,
+    },
+  },
+})
+```
+
+- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
+- Optionally add `...tseslint.configs.stylisticTypeChecked`
+- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+
+```js
+// eslint.config.js
+import react from 'eslint-plugin-react'
+
+export default tseslint.config({
+  // Set the react version
+  settings: { react: { version: '18.3' } },
+  plugins: {
+    // Add the react plugin
+    react,
+  },
+  rules: {
+    // other rules...
+    // Enable its recommended rules
+    ...react.configs.recommended.rules,
+    ...react.configs['jsx-runtime'].rules,
+  },
+})
+```
